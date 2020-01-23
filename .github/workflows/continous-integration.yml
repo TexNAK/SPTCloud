@@ -1,0 +1,144 @@
+on: [push, pull_request]
+
+name: Continuous integration
+
+jobs:
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain:
+          - nightly
+        arch:
+          - i686-unknown-linux-gnu
+          - x86_64-unknown-linux-gnu
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          target: ${{ matrix.arch }}
+          override: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --target ${{ matrix.arch }} --release
+
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: test
+          args: --target ${{ matrix.arch }}
+
+      - name: Run clippy
+        if: matrix.toolchain == 'stable'
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: clippy
+          args: --target ${{ matrix.arch }} -- -D warnings
+
+      - name: Archive Build Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: sptcloud-${{ matrix.arch }}
+          path: target/${{ matrix.arch }}/release/sptcloud
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        toolchain:
+          - nightly
+        arch:
+          - i686-pc-windows-msvc
+          - x86_64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          target: ${{ matrix.arch }}
+          override: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --target ${{ matrix.arch }} --release
+
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: test
+          args: --target ${{ matrix.arch }}
+
+      - name: Run clippy
+        if: matrix.toolchain == 'stable'
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: clippy
+          args: --target ${{ matrix.arch }} -- -D warnings
+          
+      - name: Show build directory
+        run: dir /s /b D:\a\SPTCloud\SPTCloud
+          
+      - name: Archive Build Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: sptcloud-${{ matrix.arch }}
+          path: target/${{ matrix.arch }}/release/sptcloud
+
+  macos:
+    name: macOS
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        toolchain:
+          - nightly
+        arch:
+          - x86_64-apple-darwin
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          target: ${{ matrix.arch }}
+          override: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --target ${{ matrix.arch }} --release
+
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: test
+          args: --target ${{ matrix.arch }}
+
+      - name: Run clippy
+        if: matrix.toolchain == 'stable'
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: clippy
+          args: --target ${{ matrix.arch }} -- -D warnings
+          
+      - name: Archive Build Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: sptcloud-${{ matrix.arch }}
+          path: target/${{ matrix.arch }}/release/sptcloud
