@@ -2,21 +2,32 @@ use std::{error};
 use std::io::prelude::*;
 use std::io::{Write, Seek, copy};
 use std::fs::File;
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::time::Duration;
 
 use std::net::{TcpListener};
 use std::thread;
 
 use tempfile::Builder;
 
-pub fn host() -> Result<(), Box<dyn error::Error + Send + Sync>> {
-    let listener = TcpListener::bind("127.0.0.1:2399")?;
-    
-    println!("listening started, ready to accept");
+use log::{debug, info, warn};
+
+pub fn host(bind_address: &str) -> Result<(), Box<dyn error::Error + Send + Sync>> {
+    let listener = TcpListener::bind(bind_address)?;
+
+    warn!("SPTCloud listening on {}", bind_address);
     
     for stream in listener.incoming() {
         thread::spawn(|| {
             let mut stream = stream.unwrap();
+
+            stream.set_read_timeout(Some(Duration::from_secs(15))).unwrap();
+
+            if let Ok(peer_addr) = stream.peer_addr() {
+                info!("Incoming connection from {}", peer_addr);
+            } else {
+                info!("Incoming connection");
+            }
             
             // Read the incoming project archive size
             let mut archive_size_buffer = [0; 8];
@@ -28,7 +39,7 @@ pub fn host() -> Result<(), Box<dyn error::Error + Send + Sync>> {
             }
 
             // Read the archive
-            println!("Receiving project file ({} bytes)", archive_size);
+            debug!("Receiving project file ({} bytes)", archive_size);
             let dir = Builder::new().prefix("sptcloud-build-").tempdir_in(".").unwrap();
             let archive_file_path = dir.path().join("archive.zip");
             let mut archive_file = File::create(archive_file_path).unwrap();
@@ -42,7 +53,7 @@ pub fn host() -> Result<(), Box<dyn error::Error + Send + Sync>> {
             let output_file_path = dir.path().join("main.pdf");
             let mut output_file = File::open(output_file_path).unwrap();
             let output_size = output_file.stream_len().unwrap();
-            println!("Sending artifact ({} bytes)", output_size);
+            debug!("Sending artifact ({} bytes)", output_size);
             
             // Write the file size and content
             stream.write_all(&mut output_size.to_ne_bytes()).unwrap();
@@ -65,6 +76,7 @@ fn execute_compilation_container(mount_directory: &std::path::Path) {
         .arg("-v")
         .arg(mount)
         .arg("docker.pkg.github.com/texnak/sptcloud/sptcloud-pandoc-build:latest")
+        .stdout(Stdio::null())
         .status()
         .expect("failed to execute process");
 
