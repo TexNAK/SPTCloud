@@ -28,23 +28,23 @@ jobs:
           command: build
           args: --target ${{ matrix.arch }} --release
 
-      - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: test
-          args: --target ${{ matrix.arch }}
+#       - name: Run tests
+#         uses: actions-rs/cargo@v1
+#         with:
+#           use-cross: true
+#           command: test
+#           args: --target ${{ matrix.arch }}
 
-      - name: Run clippy
-        if: matrix.toolchain == 'stable'
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: clippy
-          args: --target ${{ matrix.arch }} -- -D warnings
+#       - name: Run clippy
+#         if: matrix.toolchain == 'stable'
+#         uses: actions-rs/cargo@v1
+#         with:
+#           use-cross: true
+#           command: clippy
+#           args: --target ${{ matrix.arch }} -- -D warnings
 
       - name: Show directory
-        run: tree . && ls target/release
+        run: ls target/release && find target
 #       - name: Archive Build Artifact
 #         uses: actions/upload-artifact@v1
 #         with:
