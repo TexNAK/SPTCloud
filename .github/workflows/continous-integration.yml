@@ -89,14 +89,11 @@ jobs:
           command: clippy
           args: --target ${{ matrix.arch }} -- -D warnings
           
-      - name: Show build directory
-        run: Get-ChildItem -path D:\a\SPTCloud\SPTCloud -recurse
-          
       - name: Archive Build Artifact
         uses: actions/upload-artifact@v1
         with:
           name: sptcloud-${{ matrix.arch }}
-          path: target/${{ matrix.arch }}/release/sptcloud
+          path: target/${{ matrix.arch }}/release/sptcloud.exe
 
   macos:
     name: macOS
