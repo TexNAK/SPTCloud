@@ -55,7 +55,7 @@ fn send_request(source_archive: &str, destination_file: &str, host: &str) -> Res
     
     // Write the file size and content
     stream.write_all(&mut file_size.to_ne_bytes())?;
-    debug!("Uploading {} bytes", file_size);
+    info!("Uploading {} bytes", file_size);
     copy(&mut file, &mut stream)?;
     stream.flush()?;
 
