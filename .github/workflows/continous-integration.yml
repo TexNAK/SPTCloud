@@ -43,6 +43,9 @@ jobs:
           command: clippy
           args: --target ${{ matrix.arch }} -- -D warnings
 
+      - name: Change file permissions
+        run: chmod +x target/${{ matrix.arch }}/release/sptcloud
+
       - name: Archive Build Artifact
         uses: actions/upload-artifact@v1
         with:
@@ -133,6 +136,9 @@ jobs:
           use-cross: true
           command: clippy
           args: --target ${{ matrix.arch }} -- -D warnings
+          
+      - name: Change file permissions
+        run: chmod +x target/${{ matrix.arch }}/release/sptcloud
           
       - name: Archive Build Artifact
         uses: actions/upload-artifact@v1
