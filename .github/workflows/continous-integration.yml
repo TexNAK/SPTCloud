@@ -89,14 +89,11 @@ jobs:
           command: clippy
           args: --target ${{ matrix.arch }} -- -D warnings
           
-      - name: Show build directory
-        run: dir /s /b D:\a\SPTCloud\SPTCloud
-          
       - name: Archive Build Artifact
         uses: actions/upload-artifact@v1
         with:
           name: sptcloud-${{ matrix.arch }}
-          path: target/${{ matrix.arch }}/release/sptcloud
+          path: target/${{ matrix.arch }}/release/sptcloud.exe
 
   macos:
     name: macOS
@@ -142,3 +139,72 @@ jobs:
         with:
           name: sptcloud-${{ matrix.arch }}
           path: target/${{ matrix.arch }}/release/sptcloud
+
+  create-release:
+    if: github.ref == 'refs/heads/master'
+    name: Create Release
+    needs: [linux, macos, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: CI Release (${{ github.ref }})
+          body: This pre-release has been automatically created from the newest changes to the tool.
+          draft: false
+          prerelease: true
+      - name: Output Release URL File
+        run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
+      - name: Save Release URL File for publish
+        uses: actions/upload-artifact@v1
+        with:
+          name: release_url
+          path: release_url.txt
+
+  upload-assets:
+    if: github.ref == 'refs/heads/master'
+    name: Upload Release Asset
+    needs: [linux, macos, windows, create-release]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch:
+          - i686-unknown-linux-gnu
+          - x86_64-unknown-linux-gnu
+          - i686-pc-windows-msvc
+          - x86_64-pc-windows-msvc
+          - x86_64-apple-darwin
+    steps:
+      - name: Load Release URL File from release job
+        uses: actions/download-artifact@v1
+        with:
+          name: release_url
+      - name: Get Release Upload URL
+        id: get_release_info
+        run: |
+          value=`cat release_url/release_url.txt`
+          echo ::set-output name=upload_url::$value
+        env:
+          TAG_REF_NAME: ${{ github.ref }}
+          REPOSITORY_NAME: ${{ github.repository }}
+      - name: Download build artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: sptcloud-${{ matrix.arch }}
+          path: artifact/
+      - name: Compress artifact
+        run: cd artifact && zip ../asset.zip *
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_release_info.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: asset.zip
+          asset_name: ${{ matrix.arch }}.zip
+          asset_content_type: application/zip
