@@ -89,6 +89,9 @@ jobs:
           command: clippy
           args: --target ${{ matrix.arch }} -- -D warnings
           
+      - name: Show build directory
+        run: dir /a-d /b /s
+          
       - name: Archive Build Artifact
         uses: actions/upload-artifact@v1
         with:
