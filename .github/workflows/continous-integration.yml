@@ -26,7 +26,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --target ${{ matrix.arch }}
+          args: --target ${{ matrix.arch }} --release
 
       - name: Run tests
         uses: actions-rs/cargo@v1
@@ -42,6 +42,12 @@ jobs:
           use-cross: true
           command: clippy
           args: --target ${{ matrix.arch }} -- -D warnings
+
+      - name: Archive Build Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: sptcloud-${{ matrix.arch }}
+          path: target/release/sptcloud
 
   windows:
     name: Windows
@@ -66,7 +72,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --target ${{ matrix.arch }}
+          args: --target ${{ matrix.arch }} --release
 
       - name: Run tests
         uses: actions-rs/cargo@v1
@@ -82,6 +88,12 @@ jobs:
           use-cross: true
           command: clippy
           args: --target ${{ matrix.arch }} -- -D warnings
+          
+      - name: Archive Build Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: sptcloud-${{ matrix.arch }}
+          path: target/release/sptcloud
 
   macos:
     name: macOS
@@ -105,7 +117,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --target ${{ matrix.arch }}
+          args: --target ${{ matrix.arch }} --release
 
       - name: Run tests
         uses: actions-rs/cargo@v1
@@ -121,3 +133,9 @@ jobs:
           use-cross: true
           command: clippy
           args: --target ${{ matrix.arch }} -- -D warnings
+          
+      - name: Archive Build Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: sptcloud-${{ matrix.arch }}
+          path: target/release/sptcloud
