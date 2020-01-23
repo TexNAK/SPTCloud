@@ -90,7 +90,7 @@ jobs:
           args: --target ${{ matrix.arch }} -- -D warnings
           
       - name: Show build directory
-        run: Get-ChildItem -Recurse "%CD%" | Where { ! $_.PSIsContainer } | Select Name,FullName,Length
+        run: dir /s /b
           
       - name: Archive Build Artifact
         uses: actions/upload-artifact@v1
