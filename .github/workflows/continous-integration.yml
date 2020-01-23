@@ -171,13 +171,17 @@ jobs:
           - x86_64-pc-windows-msvc
           - x86_64-apple-darwin
     steps:
-      - name: Upload Release Asset
-        id: upload-release-asset 
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: AButler/upload-release-assets@v2.0
         with:
-          upload_url: ${{ jobs.create-release.steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./sptcloud-${{ matrix.arch }}
-          asset_name: sptcloud-${{ matrix.arch }}.zip
-          asset_content_type: application/zip
+          files: '*.zip'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+#       - name: Upload Release Asset
+#         id: upload-release-asset 
+#         uses: actions/upload-release-asset@v1.0.1
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         with:
+#           upload_url: ${{ jobs.create-release.steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+#           asset_path: ./sptcloud-${{ matrix.arch }}
+#           asset_name: sptcloud-${{ matrix.arch }}.zip
+#           asset_content_type: application/zip
