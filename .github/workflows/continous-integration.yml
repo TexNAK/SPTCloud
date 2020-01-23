@@ -90,7 +90,7 @@ jobs:
           args: --target ${{ matrix.arch }} -- -D warnings
           
       - name: Show build directory
-        run: dir /s /b
+        run: dir /s /b D:\a\SPTCloud\SPTCloud
           
       - name: Archive Build Artifact
         uses: actions/upload-artifact@v1
