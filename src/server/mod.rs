@@ -1,14 +1,16 @@
 use std::{error};
 use std::io::prelude::*;
+use std::path::Path;
 use std::io::{Write, Seek, copy};
-use std::fs::File;
-use std::process::{Command, Stdio};
+use std::fs::{File};
+use std::process::{Command};
 use std::time::Duration;
 
 use std::net::{TcpListener};
 use std::thread;
 
 use tempfile::Builder;
+use uuid::Uuid;
 
 use log::{debug, info, warn};
 
@@ -20,13 +22,14 @@ pub fn host(bind_address: &str) -> Result<(), Box<dyn error::Error + Send + Sync
     for stream in listener.incoming() {
         thread::spawn(|| {
             let mut stream = stream.unwrap();
+            let stream_id = Uuid::new_v4();
 
             stream.set_read_timeout(Some(Duration::from_secs(300))).unwrap();
 
             if let Ok(peer_addr) = stream.peer_addr() {
-                info!("Incoming connection from {}", peer_addr);
+                info!("Incoming connection from {} ({})", peer_addr, stream_id);
             } else {
-                info!("Incoming connection");
+                info!("Incoming connection ({})", stream_id);
             }
             
             // Read the incoming project archive size
@@ -47,7 +50,7 @@ pub fn host(bind_address: &str) -> Result<(), Box<dyn error::Error + Send + Sync
             copy(&mut handler, &mut archive_file).unwrap();
 
             // Build the project
-            execute_compilation_container(dir.path());
+            execute_compilation_container(dir.path(), &stream_id);
 
             // Send the result size and content
             let output_file_path = dir.path().join("main.pdf");
@@ -66,8 +69,9 @@ pub fn host(bind_address: &str) -> Result<(), Box<dyn error::Error + Send + Sync
     Ok(())
 }
 
-fn execute_compilation_container(mount_directory: &std::path::Path) {
+fn execute_compilation_container(mount_directory: &std::path::Path, id: &Uuid) {
     let mount = format!("{}:/mount", mount_directory.to_str().unwrap());
+    let log_file = File::create(format!("{}.log", id.to_simple().to_string())).unwrap();
 
     let status = Command::new("docker")
         .arg("run")
@@ -76,7 +80,7 @@ fn execute_compilation_container(mount_directory: &std::path::Path) {
         .arg("-v")
         .arg(mount)
         .arg("docker.pkg.github.com/texnak/sptcloud/sptcloud-pandoc-build:latest")
-        .stdout(Stdio::null())
+        .stdout(log_file)
         .status()
         .expect("failed to execute process");
 
