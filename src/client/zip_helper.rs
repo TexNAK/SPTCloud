@@ -14,7 +14,7 @@ fn zip_dir<T>(it: &mut dyn Iterator<Item=DirEntry>, prefix: &str, writer: T, met
         .compression_method(method)
         .unix_permissions(0o755);
 
-    let blacklist = [".git", ".github", ".vscode", "out", ".DS_Store"];
+    let blacklist = [".git", ".github", ".vscode", "out", ".DS_Store", "sptcloud", "sptcloud.exe"];
     let mut buffer = Vec::new();
     for entry in it {
         let path = entry.path();
