@@ -21,7 +21,7 @@ pub fn host(bind_address: &str) -> Result<(), Box<dyn error::Error + Send + Sync
         thread::spawn(|| {
             let mut stream = stream.unwrap();
 
-            stream.set_read_timeout(Some(Duration::from_secs(15))).unwrap();
+            stream.set_read_timeout(Some(Duration::from_secs(300))).unwrap();
 
             if let Ok(peer_addr) = stream.peer_addr() {
                 info!("Incoming connection from {}", peer_addr);
